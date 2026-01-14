@@ -1,0 +1,57 @@
+import { TrendingUp, MapPin } from 'lucide-react';
+import { bestSellers } from '@/data/mockData';
+import { cn } from '@/lib/utils';
+
+export function BestSellers() {
+  return (
+    <section className="py-4 pb-24">
+      <div className="flex items-center gap-2 px-4 mb-3">
+        <TrendingUp className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold text-foreground">Mais Vendidos da Região</h2>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-3 px-4">
+        {bestSellers.map((product, index) => (
+          <div
+            key={product.id}
+            className={cn(
+              "bg-card rounded-2xl shadow-soft overflow-hidden transition-all duration-300 hover:shadow-medium hover:scale-[1.02] animate-slide-up"
+            )}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="relative">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-28 object-cover"
+              />
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm">
+                <span className="text-[10px] font-medium text-muted-foreground">{product.category}</span>
+              </div>
+            </div>
+            
+            <div className="p-3">
+              <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-2">
+                {product.name}
+              </h3>
+              
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-lg font-bold text-primary">
+                  R$ {product.price.toFixed(2).replace('.', ',')}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground line-clamp-1">{product.store}</span>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-primary" />
+                  <span className="text-xs font-medium text-primary">{product.distance} km</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
