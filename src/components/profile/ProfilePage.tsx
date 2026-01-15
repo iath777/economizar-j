@@ -13,21 +13,42 @@ import {
   Check,
   LogOut,
   Settings,
-  Sun
+  Sun,
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const accountItems = [
-  { icon: User, label: 'Editar perfil', description: 'Nome, foto e dados pessoais' },
   { icon: MapPin, label: 'Endereços salvos', description: '2 endereços cadastrados' },
   { icon: CreditCard, label: 'Pagamentos', description: 'Cartões e Pix' },
 ];
 
 export function ProfilePage() {
+  const { user, signOut } = useAuth();
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark');
   });
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || '');
+      setAvatarUrl(profile.avatar_url || '');
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -39,11 +60,23 @@ export function ProfilePage() {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    console.log('Dark mode:', !isDarkMode);
   };
 
   const handleMenuClick = (label: string) => {
     console.log('Menu clicked:', label);
+  };
+
+  const handleSaveProfile = async () => {
+    await updateProfile.mutateAsync({
+      display_name: displayName,
+      avatar_url: avatarUrl || null,
+    });
+    setIsEditing(false);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success('Você saiu da conta');
   };
 
   const settingsItems = [
@@ -53,30 +86,109 @@ export function ProfilePage() {
     { icon: HelpCircle, label: 'Suporte', description: 'Ajuda e contato' },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="pb-24">
       {/* Header */}
       <header className="bg-gradient-gold px-4 pt-6 pb-8 rounded-b-[2rem]">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold text-primary-foreground">Meu Perfil</h1>
-          <button className="p-2 rounded-full bg-primary-foreground/20 text-primary-foreground">
+          <button 
+            onClick={() => setIsEditing(!isEditing)}
+            className="p-2 rounded-full bg-primary-foreground/20 text-primary-foreground"
+          >
             <Settings className="w-5 h-5" />
           </button>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary-foreground/30 flex items-center justify-center border-2 border-primary-foreground/50">
-            <User className="w-8 h-8 text-primary-foreground" />
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-primary-foreground/30 flex items-center justify-center border-2 border-primary-foreground/50 overflow-hidden">
+              {profile?.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-8 h-8 text-primary-foreground" />
+              )}
+            </div>
+            {isEditing && (
+              <button className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-primary-foreground text-primary">
+                <Camera className="w-3 h-3" />
+              </button>
+            )}
           </div>
           <div>
-            <h2 className="text-lg font-bold text-primary-foreground">Usuário</h2>
-            <p className="text-sm text-primary-foreground/80">usuario@email.com</p>
+            <h2 className="text-lg font-bold text-primary-foreground">
+              {profile?.display_name || 'Usuário'}
+            </h2>
+            <p className="text-sm text-primary-foreground/80">{user?.email}</p>
           </div>
         </div>
       </header>
+
+      {/* Edit Profile Form */}
+      {isEditing && (
+        <div className="mx-4 -mt-4 p-4 rounded-2xl bg-card shadow-medium relative z-20 mb-4">
+          <h3 className="font-bold text-foreground mb-4">Editar Perfil</h3>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Nome</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Seu nome"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="avatarUrl">URL do Avatar</Label>
+              <Input
+                id="avatarUrl"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditing(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                variant="gold" 
+                onClick={handleSaveProfile}
+                disabled={updateProfile.isPending}
+                className="flex-1"
+              >
+                {updateProfile.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Premium Banner */}
-      <div className="mx-4 -mt-4 p-4 rounded-2xl bg-card shadow-medium relative overflow-hidden">
+      <div className={cn("mx-4 p-4 rounded-2xl bg-card shadow-medium relative overflow-hidden", !isEditing && "-mt-4")}>
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-premium opacity-20 blur-2xl" />
         
         <div className="flex items-start gap-3 relative z-10">
@@ -200,7 +312,10 @@ export function ProfilePage() {
       
       {/* Logout */}
       <div className="px-4 mt-6">
-        <button className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+        >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Sair da conta</span>
         </button>

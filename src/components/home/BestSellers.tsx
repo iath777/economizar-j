@@ -1,8 +1,24 @@
-import { TrendingUp, MapPin } from 'lucide-react';
-import { bestSellers } from '@/data/mockData';
+import { TrendingUp, MapPin, Loader2 } from 'lucide-react';
+import { useBestSellers } from '@/hooks/useProducts';
 import { cn } from '@/lib/utils';
 
 export function BestSellers() {
+  const { data: products, isLoading } = useBestSellers();
+
+  if (isLoading) {
+    return (
+      <section className="py-4 pb-24">
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-4 pb-24">
       <div className="flex items-center gap-2 px-4 mb-3">
@@ -11,7 +27,7 @@ export function BestSellers() {
       </div>
       
       <div className="grid grid-cols-2 gap-3 px-4">
-        {bestSellers.map((product, index) => (
+        {products.map((product, index) => (
           <div
             key={product.id}
             className={cn(
@@ -37,7 +53,7 @@ export function BestSellers() {
               
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-lg font-bold text-primary">
-                  R$ {product.price.toFixed(2).replace('.', ',')}
+                  R$ {Number(product.price).toFixed(2).replace('.', ',')}
                 </span>
               </div>
               
