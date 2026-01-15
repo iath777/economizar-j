@@ -8,10 +8,14 @@ import { SearchHeader } from '@/components/search/SearchHeader';
 import { CategoryGrid } from '@/components/search/CategoryGrid';
 import { OnlineFeed } from '@/components/online/OnlineFeed';
 import { ProfilePage } from '@/components/profile/ProfilePage';
-import { cn } from '@/lib/utils';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -28,8 +32,8 @@ const Index = () => {
       case 'search':
         return (
           <main className="min-h-screen bg-background animate-fade-in">
-            <SearchHeader />
-            <CategoryGrid />
+            <SearchHeader onSearch={handleSearch} />
+            <CategoryGrid searchQuery={searchQuery} />
           </main>
         );
       

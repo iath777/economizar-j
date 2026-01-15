@@ -1,9 +1,24 @@
-import { Fuel, MapPin, Clock, ChevronRight, Droplet } from 'lucide-react';
-import { gasStations } from '@/data/mockData';
+import { Fuel, MapPin, Clock, ChevronRight, Droplet, Loader2 } from 'lucide-react';
+import { useGasStations, useCheapestGasStation } from '@/hooks/useGasStations';
 import { cn } from '@/lib/utils';
 
 export function FuelSection() {
-  const cheapestGas = gasStations.reduce((a, b) => a.gasoline < b.gasoline ? a : b);
+  const { data: stations, isLoading } = useGasStations();
+  const { data: cheapestGas } = useCheapestGasStation();
+
+  if (isLoading) {
+    return (
+      <section className="py-4">
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!stations || stations.length === 0) {
+    return null;
+  }
   
   return (
     <section className="py-4">
@@ -19,25 +34,27 @@ export function FuelSection() {
       </div>
       
       {/* Highlight Card */}
-      <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-gold shadow-gold">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-primary-foreground/80">Gasolina mais barata</p>
-            <p className="text-2xl font-bold text-primary-foreground mt-1">
-              R$ {cheapestGas.gasoline.toFixed(2).replace('.', ',')}
-            </p>
-            <p className="text-sm text-primary-foreground/90 mt-1">{cheapestGas.name}</p>
-          </div>
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-foreground/20">
-            <MapPin className="w-4 h-4 text-primary-foreground" />
-            <span className="text-sm font-semibold text-primary-foreground">{cheapestGas.distance} km</span>
+      {cheapestGas && (
+        <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-gold shadow-gold">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-primary-foreground/80">Gasolina mais barata</p>
+              <p className="text-2xl font-bold text-primary-foreground mt-1">
+                R$ {Number(cheapestGas.gasoline).toFixed(2).replace('.', ',')}
+              </p>
+              <p className="text-sm text-primary-foreground/90 mt-1">{cheapestGas.name}</p>
+            </div>
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-foreground/20">
+              <MapPin className="w-4 h-4 text-primary-foreground" />
+              <span className="text-sm font-semibold text-primary-foreground">{cheapestGas.distance} km</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
       {/* Fuel Cards */}
       <div className="flex gap-3 px-4 overflow-x-auto hide-scrollbar pb-2">
-        {gasStations.slice(0, 4).map((station, index) => (
+        {stations.slice(0, 4).map((station, index) => (
           <div
             key={station.id}
             className={cn(
@@ -51,7 +68,7 @@ export function FuelSection() {
               </span>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
-                {station.updatedAt}
+                {station.updated_at}
               </div>
             </div>
             
@@ -66,7 +83,7 @@ export function FuelSection() {
                   <span className="text-xs text-muted-foreground">Gasolina</span>
                 </div>
                 <span className="text-sm font-bold text-foreground">
-                  R$ {station.gasoline.toFixed(2).replace('.', ',')}
+                  R$ {Number(station.gasoline).toFixed(2).replace('.', ',')}
                 </span>
               </div>
               
@@ -76,7 +93,7 @@ export function FuelSection() {
                   <span className="text-xs text-muted-foreground">Etanol</span>
                 </div>
                 <span className="text-sm font-bold text-foreground">
-                  R$ {station.ethanol.toFixed(2).replace('.', ',')}
+                  R$ {Number(station.ethanol).toFixed(2).replace('.', ',')}
                 </span>
               </div>
               
@@ -86,7 +103,7 @@ export function FuelSection() {
                   <span className="text-xs text-muted-foreground">Diesel</span>
                 </div>
                 <span className="text-sm font-bold text-foreground">
-                  R$ {station.diesel.toFixed(2).replace('.', ',')}
+                  R$ {Number(station.diesel).toFixed(2).replace('.', ',')}
                 </span>
               </div>
             </div>

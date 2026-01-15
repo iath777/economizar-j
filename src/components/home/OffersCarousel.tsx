@@ -1,8 +1,24 @@
-import { ChevronRight, Tag } from 'lucide-react';
-import { featuredProducts } from '@/data/mockData';
+import { ChevronRight, Tag, Loader2 } from 'lucide-react';
+import { useFeaturedProducts } from '@/hooks/useProducts';
 import { cn } from '@/lib/utils';
 
 export function OffersCarousel() {
+  const { data: products, isLoading } = useFeaturedProducts();
+
+  if (isLoading) {
+    return (
+      <section className="py-4">
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-4">
       <div className="flex items-center justify-between px-4 mb-3">
@@ -17,7 +33,7 @@ export function OffersCarousel() {
       </div>
       
       <div className="flex gap-3 px-4 overflow-x-auto hide-scrollbar pb-2">
-        {featuredProducts.map((product, index) => (
+        {products.map((product, index) => (
           <div
             key={product.id}
             className={cn(
@@ -46,12 +62,12 @@ export function OffersCarousel() {
               </h3>
               <div className="flex items-baseline gap-1.5 mb-1">
                 <span className="text-base font-bold text-primary">
-                  R$ {product.price.toFixed(2).replace('.', ',')}
+                  R$ {Number(product.price).toFixed(2).replace('.', ',')}
                 </span>
               </div>
-              {product.originalPrice && (
+              {product.original_price && (
                 <span className="text-[10px] text-muted-foreground line-through">
-                  R$ {product.originalPrice.toFixed(2).replace('.', ',')}
+                  R$ {Number(product.original_price).toFixed(2).replace('.', ',')}
                 </span>
               )}
               <div className="flex items-center gap-1 mt-2">
